@@ -1,0 +1,14 @@
+collection student
+id
+name
+teacher
+
+
+
+collection teacher
+name
+subject
+
+collection subject
+id
+name
