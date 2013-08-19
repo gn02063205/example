@@ -12,3 +12,5 @@ subject
 collection subject
 id
 name
+
+message from master
