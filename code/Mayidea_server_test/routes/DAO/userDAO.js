@@ -1,5 +1,6 @@
 
 var mongoose = require('mongoose');
+
 var autoinc = require('mongoose-id-autoinc');
 
 var DbConnect = require('../model/DbConnect.js');
@@ -11,37 +12,75 @@ exports.createUser = function(_email,_password,_name,result){
 	
 	var db = DbConnect.getConnect();//db 連線
 	autoinc.init(db); //初始化autoinc 選擇db 
-	
+		
 	//user model
 	var userSchema = schema.userSchema();//套用user schema
+	
 	userSchema.set('collection','users');//指定為colection 名字:users
+	
 	var User = db.model('User',userSchema); 
-	var createModel = new User({
-			fb_id:null,
-			email:_email,
-			password:_password,
-			user_name:_name,
-			create_date:new Date(),
-			modified_date:new Date(),
-			access_token:null	
-		});
-
+	
+	var user = new User();
+			user.id = userSchema.plugin(autoinc.plugin,{model:'User',field:'id',start:10001,step:1});//autoinc插件 流水號uid++;
+			user.fb_id = null;
+			user.email =_email;
+			user.password = _password;
+			user.user_name = _name;
+			user.create_date = new Date();
+			user.modified_date = new Date();
+			user.access_token = null;
+			user.profile_pic = null;
+			user.mypet_profile = null;
+			user.subscribe = null;
+		
 	//db open
-	db.once('open',function(){		
-		userSchema.plugin(autoinc.plugin,{model:'User',field:'uid',start:10001,step:1});//autoinc插件 流水號uid++
-		User.create(createModel,function(err,User){
+	db.once('open',function(){			
+		User.create(user,function(err,User){
 			if(err){
 				console.log('[error] create');
 				console.log(err);
-				result(false);//callback
+				result(false,null);//callback
 				db.close();				
 			}else{
 				console.log('create done');	
-				result(true);//callback
+				result(true,User.id);//callback
 				
 			}							
 		});				
 	});
+	
+};
+
+
+exports.findUserEmail = function(_email,result){
+	var db = DbConnect.getConnect();
+	
+	var userSchema = schema.userSchema();
+	
+	userSchema.set('collection','users');
+	
+	var User = db.model('User',userSchema); 
+	
+	var cond = {email:_email};
+	
+	db.once('open',function(){
+		User.find(cond,function(err,User){ 
+			if(err){
+				console.log('[error] query');
+				console.log(err);
+				result(false);
+				db.close();
+			}else{
+				if(User==''){
+					console.log('not found');
+					result(false);
+				}else{
+					console.log(User);
+					result(true);
+				}
+			}				
+		});			
+	});				
 };
 
 

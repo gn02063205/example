@@ -16,4 +16,4 @@ exports.getConnect = function()
 	
 	return db;	// 回傳連線物件
 	
-}
+};
